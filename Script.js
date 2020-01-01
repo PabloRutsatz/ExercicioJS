@@ -6,8 +6,6 @@ var buttonAdicionar = document.querySelector('#app button');
 
 function RenderizaGits(listaGit) {
 
-    ul.innerHTML = '';
-
     for (git of listaGit) {
         var ElementUl = document.createElement('li');
         var ElementText = document.createTextNode(git['name']);
@@ -17,26 +15,47 @@ function RenderizaGits(listaGit) {
     }
 }
 
-function AdicionaInfoGit() {
-    var nomeGit = inputAdicionar.value;
+function PesquisaGit() {
 
-    var conexao = new XMLHttpRequest();
-    //conexao.open('GET', ' https://api.github.com/users/pablorutsatz/repos');
-    conexao.open('GET', ' https://api.github.com/users/' + nomeGit + '/repos');
-    conexao.send(null);
+    var GitLocalizado = function () {
+        return new Promise(function (resolve, reject) {
 
-    conexao.onreadystatechange = function () {
-        if (conexao.readyState === 4) {
-            if (conexao.status == 200) {
-                var listaItens = JSON.parse(conexao.responseText);
-                console.log(listaItens);
-                RenderizaGits(listaItens);
+            var nomeGit = inputAdicionar.value;
+
+            var conexao = new XMLHttpRequest();
+            //conexao.open('GET', ' https://api.github.com/users/pablorutsatz/repos');
+            conexao.open('GET', ' https://api.github.com/users/' + nomeGit + '/repos');
+            conexao.send(null);
+
+            var ElementUl = document.createElement('li');
+            var ElementText = document.createTextNode('Carregando...');
+
+            ElementUl.appendChild(ElementText);
+            ul.appendChild(ElementUl);
+
+            conexao.onreadystatechange = function () {
+
+                ul.innerHTML = '';
+                
+                if (conexao.readyState === 4) {
+                    if (conexao.status == 200) {
+                        var listaItens = JSON.parse(conexao.responseText);
+                        console.log(listaItens);
+                        resolve(listaItens);
+                    }
+                    else {
+                        reject('Git não encontrado.');
+                    }
+                }
             }
-            else {
-                console.warn('Erro');
-            }
-        }
+        });
     }
+
+    GitLocalizado().then(function (response) {
+        RenderizaGits(response);
+    }).catch(function(reject){
+        alert(reject);          
+    });
 }
 
-buttonAdicionar.onclick = AdicionaInfoGit;
+buttonAdicionar.onclick = PesquisaGit;
